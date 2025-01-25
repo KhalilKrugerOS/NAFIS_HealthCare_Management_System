@@ -1,5 +1,5 @@
 import { IsInt, IsNotEmpty, IsString, IsDateString } from 'class-validator';
-
+import { RendezvousStatut } from '../entities/rendez-vous.entity';
 export class CreateRendezVousDto {
   @IsInt()
   @IsNotEmpty()
@@ -19,5 +19,5 @@ export class CreateRendezVousDto {
 
   @IsString()
   @IsNotEmpty()
-  statut: string;
+  statut: RendezvousStatut;
 }

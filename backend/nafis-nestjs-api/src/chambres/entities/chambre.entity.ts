@@ -27,13 +27,16 @@ import {
     @Column({
       type: 'enum',
       enum: ChambreType,
+      enumName: 'chambre_type',
     })
     type: ChambreType;
   
+ 
     @Column({
       type: 'enum',
       enum: ChambreStatut,
       default: ChambreStatut.LIBRE,
+      enumName: 'chambre_statut',
     })
     statut: ChambreStatut;
   
@@ -43,7 +46,7 @@ import {
 
   
     @OneToOne(() => Patient, (patient) => patient.chambre, { cascade: true, eager: true })
-    @JoinColumn({ name: 'patientId' }) // Ensures the patientId column is linked to the Patient relationship
+    @JoinColumn({ name: 'patientId' }) 
     patient: Patient;
   
     @BeforeInsert()

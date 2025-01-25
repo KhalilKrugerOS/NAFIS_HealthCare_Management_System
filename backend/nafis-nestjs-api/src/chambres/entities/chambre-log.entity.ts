@@ -21,6 +21,7 @@ export class ChambreLog {
   @Column({
     type: 'enum',
     enum: ChambreStatut,
+    enumName: 'chambre_statut',
   })
   statut: ChambreStatut;
 

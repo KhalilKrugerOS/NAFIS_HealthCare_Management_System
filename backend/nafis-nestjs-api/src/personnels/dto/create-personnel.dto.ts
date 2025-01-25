@@ -1,5 +1,7 @@
-import { IsString, IsNotEmpty, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsEnum } from 'class-validator';
 import { CreatePersonBaseDto } from 'src/common/dto/create-person-base.dto';
+import { PersonnelStatut } from '../entities/personnel.entity';
+
 export class CreatePersonnelDto extends CreatePersonBaseDto {
   @IsNotEmpty()
   @IsString()
@@ -14,6 +16,6 @@ export class CreatePersonnelDto extends CreatePersonBaseDto {
   email: string;
 
   @IsNotEmpty()
-  @IsString()
-  statut: string;
+  @IsEnum(PersonnelStatut) 
+  statut: PersonnelStatut;
 }

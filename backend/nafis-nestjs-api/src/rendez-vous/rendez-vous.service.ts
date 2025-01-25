@@ -7,15 +7,18 @@ import { MoreThan, Repository } from 'typeorm';
 import { Patient } from 'src/patients/entities/patient.entity';
 import { Personnel } from 'src/personnels/entities/personnel.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
 @Injectable()
 export class RendezVousService {
   private readonly logger = new Logger(RendezVousService.name);
+
   constructor(
     @InjectRepository(RendezVous)
-    private readonly rendezvousRepository: Repository<RendezVous>) {
-  }
+    private readonly rendezvousRepository: Repository<RendezVous>,
+  ) {}
+
   async create(createRendezVousDto: CreateRendezVousDto) {
-    const rv=this.rendezvousRepository.create(createRendezVousDto);
+    const rv = this.rendezvousRepository.create(createRendezVousDto);
     return await this.rendezvousRepository.save(rv);
   }
 
@@ -24,25 +27,29 @@ export class RendezVousService {
   }
 
   async findOne(id: number) {
-    return await this.rendezvousRepository.findOne({where: {id}});
+    return await this.rendezvousRepository.findOne({
+      where: { id },
+      relations: ['patient', 'medecin'], // Include relations
+    });
   }
 
   async update(id: number, updateRendezVousDto: UpdateRendezVousDto) {
-    const rv=await this.findOne(id);
-    if(!rv){
-      throw new NotFoundException();
+    const rv = await this.findOne(id);
+    if (!rv) {
+      throw new NotFoundException('Appointment not found');
     }
-    Object.assign(rv,updateRendezVousDto);
+    Object.assign(rv, updateRendezVousDto);
     return await this.rendezvousRepository.save(rv);
   }
 
   async remove(id: number) {
-    const rv=await this.findOne(id);
-    if(!rv){
-      throw new NotFoundException();
+    const rv = await this.findOne(id);
+    if (!rv) {
+      throw new NotFoundException('Appointment not found');
     }
     return await this.rendezvousRepository.remove(rv);
   }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handleReminders() {
     await this.sendReminders();
@@ -52,21 +59,25 @@ export class RendezVousService {
     const now = new Date();
     const upcomingAppointments = await this.rendezvousRepository.find({
       where: {
-        date: MoreThan(now),  
-        rappelEnvoye: false,  
+        date: MoreThan(now),
+        rappelEnvoye: false,
       },
+      relations: ['patient', 'medecin'], // Load related patient and medecin
     });
 
     for (const appointment of upcomingAppointments) {
       const reminderTime = new Date(appointment.date);
-      reminderTime.setMinutes(reminderTime.getMinutes() - 30); 
+      reminderTime.setMinutes(reminderTime.getMinutes() - 30);
 
       if (now >= reminderTime) {
         const patient: Patient = appointment.patient;
         const doctor: Personnel = appointment.medecin;
 
-        this.logger.log(`Sending reminder to patient: ${patient.name} for appointment with Dr. ${doctor.name}`);
+        this.logger.log(
+          `Sending reminder to patient: ${patient.email} for appointment with Dr. ${doctor.email}`,
+        );
 
+        // Mark reminder as sent
         appointment.rappelEnvoye = true;
         await this.rendezvousRepository.save(appointment);
       }
@@ -77,14 +88,10 @@ export class RendezVousService {
     const appointments = await this.rendezvousRepository.find({
       where: {
         patientId: id,
-        rappelEnvoye: true, 
+        rappelEnvoye: true,
       },
     });
 
-    if (!appointments) {
-      throw new NotFoundException('No appointments found for this patient');
-    }
-
-    return appointments;
+    return appointments || [];
   }
 }

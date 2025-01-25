@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, IsInt, IsDateString, IsEnum } from 'class-validator';
-import { PresenceStatut } from '../entities/presence.entity';
+import { PersonnelStatut } from 'src/personnels/entities/personnel.entity';
 
 export class CreatePresenceDto {
   @IsDateString()
@@ -7,8 +7,8 @@ export class CreatePresenceDto {
   date: string;
 
   @IsNotEmpty()
-  @IsEnum(PresenceStatut)  
-  statut: PresenceStatut;
+  @IsEnum(PersonnelStatut)  
+  statut: PersonnelStatut;
 
 
   @IsInt()

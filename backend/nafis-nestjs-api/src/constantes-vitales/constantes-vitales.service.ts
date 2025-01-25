@@ -4,11 +4,14 @@ import { UpdateConstantesVitaleDto } from './dto/update-constantes-vitale.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConstantesVitales } from './entities/constantes-vitale.entity';
 import { Repository } from 'typeorm';
+import { VitalsMetricsService } from 'src/metrics/vitals-metrics.service';
 @Injectable()
 export class ConstantesVitalesService {
   constructor(
     @InjectRepository(ConstantesVitales)
-    private readonly constantesVitalesRepository: Repository<ConstantesVitales>){}
+    private readonly constantesVitalesRepository: Repository<ConstantesVitales>,
+    private readonly vitalsMetricsService: VitalsMetricsService
+  ){}
   
   async create(createConstantesVitaleDto: CreateConstantesVitalesDto) {
    const covi=this.constantesVitalesRepository.create(createConstantesVitaleDto);
@@ -100,7 +103,12 @@ export class ConstantesVitalesService {
       anomalies.push(`Saturation en oxygène faible : ${constantes.saturationOxygene}%`);
     }
   
+    anomalies.forEach(anomaly => {
+      this.vitalsMetricsService.recordAnomaly(patientId, anomaly);
+    });
+
     return anomalies;
+  
   }
   
 

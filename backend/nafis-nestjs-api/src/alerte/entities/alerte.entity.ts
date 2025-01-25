@@ -10,13 +10,14 @@ export enum AlerteType {
 export class Alerte {
   @PrimaryGeneratedColumn()
   id: number;
-
+/*
   @Column({
     type: 'enum',
     enum: AlerteType,
+    enumName: 'alerte_type',
   })
   type: AlerteType;
-
+*/
   @Column()
   message: string;
 

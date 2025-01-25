@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@nestjs/microservices": "^11.0.5",
+    "@nestjs/schedule": "^5.0.1",
+    "@nestjs/typeorm": "^11.0.0",
+    "@willsoto/nestjs-prometheus": "^6.0.2",
+    "prom-client": "^15.1.3",
+    "typeorm": "^0.3.20"
+  }
+}

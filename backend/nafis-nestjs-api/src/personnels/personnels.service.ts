@@ -4,13 +4,16 @@ import { UpdatePersonnelDto } from './dto/update-personnel.dto';
 import { Personnel } from './entities/personnel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { PresencesService } from 'src/presences/presences.service';
 @Injectable()
 export class PersonnelsService {
   constructor(
     @InjectRepository(Personnel)
-    private readonly personnelsRepository: Repository<Personnel>) {
+    private readonly personnelsRepository: Repository<Personnel>,
+    private readonly presencesService: PresencesService,) {
   }
   
+
   async create(createPersonnelDto: CreatePersonnelDto) {
     const personnel=this.personnelsRepository.create(createPersonnelDto);
     return await this.personnelsRepository.create(createPersonnelDto);

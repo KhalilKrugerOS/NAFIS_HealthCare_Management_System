@@ -8,7 +8,7 @@ import {
     OneToMany,
   } from "typeorm";
   import { Patient } from "src/patients/entities/patient.entity";
-import { Alerte } from "src/alerte/alerte.entity";
+import { Alerte } from "src/alerte/entities/alerte.entity";
   
   @Entity('constantes_vitales')
   export class ConstantesVitales {
