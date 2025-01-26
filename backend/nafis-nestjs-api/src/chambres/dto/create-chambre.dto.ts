@@ -1,20 +1,21 @@
-import { IsNotEmpty, IsEnum, IsOptional, IsNumber, IsDateString } from 'class-validator';
-import { ChambreType, ChambreStatut } from '../entities/chambre.entity';  
+import { IsNotEmpty, IsEnum, IsOptional, IsArray, IsNumber } from 'class-validator';
+import { ChambreType, ChambreStatut } from '../entities/chambre.entity';
 
 export class CreateChambreDto {
   @IsNotEmpty()
-  @IsEnum(ChambreType)  
+  @IsEnum(ChambreType)
   type: ChambreType;
 
   @IsNotEmpty()
-  @IsEnum(ChambreStatut)  
+  @IsEnum(ChambreStatut)
   statut: ChambreStatut;
 
   @IsOptional()
-  @IsNumber()
-  patientId?: number;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  patientIds?: number[];
 
   @IsOptional()
-  @IsDateString()
+  @IsNumber()
   dernierNettoyage?: string;
 }

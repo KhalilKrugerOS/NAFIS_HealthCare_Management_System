@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsDateString, IsOptional } from 'class-validator';
 
 export class CreateAdminDto {
   @IsNotEmpty()
@@ -10,10 +10,26 @@ export class CreateAdminDto {
   prenom: string;
 
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  @IsDateString()
+  dateNaissance: Date;  
 
   @IsNotEmpty()
   @IsString()
-  password: string;
+  numeroSecu: string;
+
+  @IsNotEmpty()
+  @IsString()
+  adresse: string;
+
+  @IsNotEmpty()
+  @IsString()
+  telephone: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  photoUrl?: string;
 }

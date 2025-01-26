@@ -1,14 +1,16 @@
 import { IsString, IsDateString, IsArray, IsNotEmpty, IsInt } from 'class-validator';
 import { Patient } from 'src/patients/entities/patient.entity';
+import { Personnel } from 'src/personnels/entities/personnel.entity';
 
 export class CreateConsultationDto {
   @IsDateString()
   @IsNotEmpty()
   date: Date;
 
-  @IsString()
+  @IsInt()
   @IsNotEmpty()
-  medecin: string;
+  // Use Personnel's id instead of the medecin's name
+  medecinId: number;
 
   @IsString()
   @IsNotEmpty()

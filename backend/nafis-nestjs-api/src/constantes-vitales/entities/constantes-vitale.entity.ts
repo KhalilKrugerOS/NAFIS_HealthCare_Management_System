@@ -43,7 +43,7 @@ import { Alerte } from "src/alerte/entities/alerte.entity";
         this.patientId = this.patient.id;
       }
     }
-    @OneToMany(() => Alerte, (alerte) => alerte.constantesVitales)
+    @OneToMany(() => Alerte, (alerte) => alerte.constantesVitales, {eager:true})
   alertes: Alerte[];
   }
   
