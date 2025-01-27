@@ -1,21 +1,20 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsDateString, IsEnum } from 'class-validator';
-import { PersonnelStatut } from 'src/personnels/entities/personnel.entity';
+import { IsDateString, IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import { PersonnelStatut } from 'src/personnels/entities/personnel.entity'; // Adjust the import path if needed
 
 export class CreatePresenceDto {
   @IsDateString()
-  @IsNotEmpty()
-  date: string;
+  date: Date;
 
-  @IsNotEmpty()
-  @IsEnum(PersonnelStatut)  
+  @IsEnum(PersonnelStatut)
   statut: PersonnelStatut;
 
-
   @IsInt()
-  @IsNotEmpty()
   personnelId: number;
 
   @IsOptional()
   @IsString()
   commentaire?: string;
+
+  // Optional: If you want to include the personnel data in the DTO
+  personnel?: { id: number };
 }

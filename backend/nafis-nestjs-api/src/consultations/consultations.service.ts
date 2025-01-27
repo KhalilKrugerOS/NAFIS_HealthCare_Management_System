@@ -17,13 +17,22 @@ export class ConsultationsService {
   ) {}
 
   async create(createConsultationDto: CreateConsultationDto) {
-    // Validate that the selected personnel is a doctor (MEDECIN) using medecinId
-    await this.validateMedecinType(createConsultationDto.medecinId);
-
-    // Create and save the consultation after validation
-    const consultation = this.consultationsRepository.create(createConsultationDto);
+    // Validate that the selected personnel is a doctor (MEDECIN)
+    const medecin = await this.personnelService.findOne(createConsultationDto.medecinId);
+    if (!medecin || medecin.type !== PersonnelType.MEDECIN) {
+      throw new BadRequestException('The selected personnel must be a doctor (MEDECIN)');
+    }
+  
+    // Create the consultation entity
+    const consultation = this.consultationsRepository.create({
+      ...createConsultationDto,
+      medecin, // Explicitly set the medecin relationship
+    });
+  
+    // Save the consultation
     return await this.consultationsRepository.save(consultation);
   }
+  
 
   async findAll() {
     return await this.consultationsRepository.find();
@@ -36,18 +45,28 @@ export class ConsultationsService {
   async update(id: number, updateConsultationDto: UpdateConsultationDto) {
     const consultation = await this.findOne(id);
     if (!consultation) {
-      throw new NotFoundException();
+      throw new NotFoundException('Consultation not found');
     }
-
+  
     // If the medecinId is being updated, validate the new medecinId
     if (updateConsultationDto.medecinId && updateConsultationDto.medecinId !== consultation.medecin.id) {
-      await this.validateMedecinType(updateConsultationDto.medecinId);
+      // Validate the new medecinId
+      const medecin = await this.personnelService.findOne(updateConsultationDto.medecinId);
+      if (!medecin || medecin.type !== PersonnelType.MEDECIN) {
+        throw new BadRequestException('The selected personnel must be a doctor (MEDECIN)');
+      }
+  
+      // Explicitly set the medecin relationship
+      consultation.medecin = medecin;
     }
-
+  
     // Update the consultation with the new data
     Object.assign(consultation, updateConsultationDto);
+  
+    // Save the updated consultation
     return await this.consultationsRepository.save(consultation);
   }
+  
 
   async remove(id: number) {
     const consultation = await this.findOne(id);

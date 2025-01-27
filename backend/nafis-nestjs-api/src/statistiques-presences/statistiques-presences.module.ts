@@ -6,9 +6,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CongeDetail } from './entities/conge-detail.entity';
 import { AbsenceDetail } from './entities/absence-detail.entity';
 import { MissionDetail } from './entities/mission-detail.entity';
+import { PresencesModule } from 'src/presences/presences.module';
 @Module({
   imports: [
-      TypeOrmModule.forFeature([StatistiquesPresence,CongeDetail,AbsenceDetail,MissionDetail]) 
+      TypeOrmModule.forFeature([StatistiquesPresence,CongeDetail,AbsenceDetail,MissionDetail]) ,
+      PresencesModule
     ],
   controllers: [StatistiquesPresencesController],
   providers: [StatistiquesPresencesService],
