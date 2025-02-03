@@ -5,10 +5,13 @@ import { AdminController } from './admin.controller';
 import { Admin } from './entities/admin.entity';
 import { UserModule } from 'src/user/user.module';
 import { User } from 'src/user/entities/user.entity';
+import { AuthModule } from 'src/auth/auth.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Admin,User]),
-    forwardRef(() => UserModule)
+    forwardRef(() => UserModule),
+    forwardRef(() => AuthModule),
+
   ],
   controllers: [AdminController],
   providers: [AdminService],

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { StatistiquesPresencesService } from './statistiques-presences.service';
 import { StatistiquesPresencesController } from './statistiques-presences.controller';
 import { StatistiquesPresence } from './entities/statistiques-presence.entity';
@@ -10,9 +10,10 @@ import { PresencesModule } from 'src/presences/presences.module';
 @Module({
   imports: [
       TypeOrmModule.forFeature([StatistiquesPresence,CongeDetail,AbsenceDetail,MissionDetail]) ,
-      PresencesModule
+      forwardRef(() => PresencesModule),
     ],
   controllers: [StatistiquesPresencesController],
   providers: [StatistiquesPresencesService],
+  exports: [StatistiquesPresencesService]
 })
 export class StatistiquesPresencesModule {}

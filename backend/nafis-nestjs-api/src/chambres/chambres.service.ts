@@ -5,13 +5,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Chambre, ChambreStatut, ChambreType } from './entities/chambre.entity';
 import { Repository } from 'typeorm';
 import { PatientsService } from 'src/patients/patients.service';
+import { ChambreHistorique } from './entities/chambre-historique.entity';
+import { ChambreLog } from './entities/chambre-log.entity';
 
 @Injectable()
 export class ChambresService {
   constructor(
     @InjectRepository(Chambre)
     private readonly chambresRepository: Repository<Chambre>,
-    private readonly patientsService: PatientsService, // Use PatientsService instead of direct repository
+    private readonly patientsService: PatientsService,
+    @InjectRepository(ChambreLog)
+    private readonly chambreLogRepository: Repository<ChambreLog>,
+    @InjectRepository(ChambreHistorique)
+    private readonly chambreHistoriqueRepository: Repository<ChambreHistorique>
   ) {}
 
   // Helper function to enforce the chambre rules based on its type and statut
@@ -80,24 +86,41 @@ export class ChambresService {
   
     const chambre = this.chambresRepository.create({
       ...chambreData,
-      statut: createChambreDto.statut, // Explicitly set the original statut
-      patients: []
+      statut: createChambreDto.statut,
+      patients: [],
     });
   
     if (patientIds.length > 0) {
       const patients = await this.patientsService.findByIds(patientIds);
-  
       if (patients.length !== patientIds.length) {
         throw new NotFoundException('Some patients not found');
       }
-  
       chambre.patients = patients;
     }
   
     this.checkChambreLogic(chambre);
   
-    return await this.chambresRepository.save(chambre);
+    // Save the Chambre
+    const savedChambre = await this.chambresRepository.save(chambre);
+  
+    // Create a ChambreLog and add it to ChambreHistorique
+    const chambreHistorique = new ChambreHistorique();
+    chambreHistorique.chambreId = savedChambre.numero.toString();
+  
+    // Create a log for the room's initial status
+    const chambreLog = new ChambreLog();
+    chambreLog.date = new Date();
+    chambreLog.statut = savedChambre.statut;
+    chambreLog.message = 'Room created';
+    chambreLog.chambreHistorique = chambreHistorique;
+  
+    // Save ChambreHistorique and ChambreLog
+    await this.chambreHistoriqueRepository.save(chambreHistorique);
+    await this.chambreLogRepository.save(chambreLog);
+  
+    return savedChambre;
   }
+  
 
   
   
@@ -130,7 +153,7 @@ export class ChambresService {
     }
   
     // Set the room status based on patientIds (before making changes to the room)
-    this.setChambreStatutBasedOnPatients(chambre, patientIds); 
+    this.setChambreStatutBasedOnPatients(chambre, patientIds);
   
     // If patientIds are provided, ensure the patients exist and update the room's patients
     if (patientIds.length > 0) {
@@ -150,9 +173,41 @@ export class ChambresService {
     // Enforce chambre logic to ensure it follows the room rules
     this.checkChambreLogic(chambre);
   
-    // Save the updated chambre and return it
-    return await this.chambresRepository.save(chambre);
-}
+    // Save the updated chambre
+    const updatedChambre = await this.chambresRepository.save(chambre);
+  
+    // Prepare chambreLog
+    let chambreHistorique = await this.chambreHistoriqueRepository.findOne({
+      where: { chambreId: chambre.numero.toString() },
+    });
+  
+    if (!chambreHistorique) {
+      // If no historique found, create a new one
+      chambreHistorique = new ChambreHistorique();
+      chambreHistorique.chambreId = chambre.numero.toString();
+      chambreHistorique.historique = [];
+    }
+  
+    const chambreLog: ChambreLog = {
+      id: Math.floor(Math.random() * 1000000), // Or use an appropriate ID strategy (e.g., generated from DB)
+      statut: chambre.statut,
+      patientId: patientIds.length > 0 ? patientIds[0] : null, // Assuming first patient ID if available
+      message: 'Chambre updated',
+      date: new Date(),
+      chambreHistorique: chambreHistorique, // Add the chambreHistorique reference
+    };
+  
+    // Push the new log entry into the chambreHistorique's historique
+    chambreHistorique.historique.push(chambreLog);
+  
+    // Save the updated chambreHistorique with the new log
+    await this.chambreHistoriqueRepository.save(chambreHistorique);
+  
+    return updatedChambre;
+  }
+  
+  
+  
 
   
 

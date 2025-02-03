@@ -8,13 +8,21 @@ import { Admin } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { UserModule } from 'src/user/user.module';
 import { AdminModule } from 'src/admin/admin.module';
-
+import { Consultation } from 'src/consultations/entities/consultation.entity';
+import { DocumentsModule } from 'src/documents/documents.module';
+import { ConsultationsModule } from 'src/consultations/consultations.module';
+import { Document } from 'src/documents/entities/document.entity';
+import { AuthModule } from 'src/auth/auth.module';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Patient]),
+    TypeOrmModule.forFeature([Patient,Consultation,Document]),
     forwardRef(() => MedicalHistoryModule),
     forwardRef(() => UserModule),
-    forwardRef(() => AdminModule)
+    forwardRef(() => AdminModule),
+    forwardRef(() => AuthModule),
+    
+    DocumentsModule,
+    ConsultationsModule
   ],
   controllers: [PatientsController],
   providers: [PatientsService],

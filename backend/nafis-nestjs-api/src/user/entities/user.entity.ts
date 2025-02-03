@@ -1,11 +1,12 @@
 /* eslint-disable prettier/prettier */
 import { IsEmail } from "class-validator";
 import { UserRoleEnum } from "../../enums/user-role.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Patient } from "src/patients/entities/patient.entity";
 import { Admin } from "src/admin/entities/admin.entity";
+import { Personnel } from "src/personnels/entities/personnel.entity";
 
-@Entity()
+@Entity("users")
 export class User {
     @PrimaryGeneratedColumn({ type: 'int', name: 'id', unsigned: true})
     id: number;
@@ -54,12 +55,14 @@ export class User {
     @DeleteDateColumn()
     deletedAt: Date;
 
-    @OneToOne(() => Admin, (admin) => admin.user, { nullable: true })
-  @JoinColumn()
-  admin?: Admin;
+    @ManyToOne(() => Admin, (admin) => admin.users, { nullable: true }) // ⬅ A User belongs to ONE Admin
+    @JoinColumn()
+    admin?: Admin;
 
-  @OneToOne(() => Patient, (patient) => patient.user, { nullable: true })
-  @JoinColumn()
-  patient?: Patient;
+  @OneToMany(() => Patient, (patient) => patient.user)
+  patients: Patient[];
 
+  @OneToOne(() => Personnel, (personnel) => personnel.user, { nullable: true })
+  @JoinColumn()
+  personnel?: Personnel;
 }

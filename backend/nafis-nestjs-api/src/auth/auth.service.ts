@@ -17,7 +17,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   
   constructor(
-    @InjectRepository(User)
+   
     private readonly userService: UserService,
     private readonly patientService: PatientsService,
     private readonly adminService: AdminService,
@@ -38,7 +38,7 @@ export class AuthService {
   async signup(newUser: SignupDto) {
     this.logger.log('Signup method called with DTO:', newUser);
 
-    const existingUser = this.userService.findByEmail(newUser.email);
+    const existingUser = await this.userService.findByEmail(newUser.email);
     if (existingUser) {
       throw new ConflictException("Email is already in use");
     }
@@ -53,7 +53,7 @@ export class AuthService {
     if (newUser.role == UserRoleEnum.ADMIN) {
       
       try {
-        await this.adminService.create(userEntity.id, {firstname:'',lastname:'',email:'',password:'',role:UserRoleEnum.VIDE});
+        await this.adminService.create([userEntity.id], {firstname:'',lastname:'',email:'',password:'',role:UserRoleEnum.VIDE});
         console.log('admin enitty is created');
       
       }
@@ -74,15 +74,15 @@ export class AuthService {
       }
 
       
-      try {
-        await this.patientService.create({ Admin: { id: admin.id },nom:'',prenom:'',numeroSecu:'',dateNaissance: new Date('2025-08-08') });
+      // try {
+      //   await this.patientService.create({ Admin: { id: admin.id },nom:'',prenom:'',numeroSecu:'',dateNaissance: new Date('2025-08-08') });
         
-      }
+      // }
   
-      catch (e) {
-        console.log(e)
-        throw new ConflictException(e);
-      }
+      // catch (e) {
+      //   console.log(e)
+      //   throw new ConflictException(e);
+      // }
   
     }
 
@@ -100,13 +100,21 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException("invalid email");
     }
-
+    console.log("login dto")
+    console.log(loginDto)
+    console.log("user")
     console.log(user)
 
-    const isPasswordMatched = await this.comparePasswords(password, user.password);
-
+    let isPasswordMatched = (await this.comparePasswords(password, user.password));
+    
     if (!isPasswordMatched) {
-      throw new UnauthorizedException("invalid password");
+        if(password==user.password){
+          isPasswordMatched=true
+        }
+        else{
+          throw new UnauthorizedException("invalid password");
+        }
+      
     }
 
     const token = this.jwtService.sign({id: user.id, email: user.email, role: user.role});

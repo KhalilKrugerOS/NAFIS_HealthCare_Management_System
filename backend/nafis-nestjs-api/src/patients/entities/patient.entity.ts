@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, ManyToOne, JoinColumn, JoinTable } from 'typeorm';
 import { Consultation } from 'src/consultations/entities/consultation.entity';
 import { Document } from 'src/documents/entities/document.entity';
 import { Chambre } from 'src/chambres/entities/chambre.entity';
@@ -7,22 +7,19 @@ import { ConstantesVitales } from 'src/constantes-vitales/entities/constantes-vi
 import { Admin } from 'src/admin/entities/admin.entity';
 import { User } from 'src/user/entities/user.entity';
 import { MedicalHistory } from 'src/medical-history/entities/medical-history.entity';
+
 @Entity('patients')
 export class Patient {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  nom: string;
+  @ManyToOne(() => User, (user) => user.patients, { onDelete: 'CASCADE', eager: true })
+    @JoinColumn()
+    user: User;
 
-  @Column()
-  prenom: string;
-
-  @Column({ type: 'date' })
-  dateNaissance: Date;
-
-  @Column()
-  numeroSecu: string;
+  @ManyToOne(() => Admin, (admin) => admin.patients, { nullable: true })
+  @JoinTable()
+  admin: Admin;
 
   @Column({ nullable: true })
   adresse: string;
@@ -31,10 +28,8 @@ export class Patient {
   telephone: string;
 
   @Column({ nullable: true })
-  email: string;
-
-  @Column({ nullable: true })
   photoUrl: string;
+
   @OneToMany(() => Consultation, (consultation) => consultation.patientId)
   consultations: Consultation[];
 
@@ -46,13 +41,10 @@ export class Patient {
 
   @OneToMany(() => ConstantesVitales, (cv) => cv.patientId)
   cv: ConstantesVitales[];
-  @ManyToOne(() => Chambre, (chambre) => chambre.patients)
-  chambre: Chambre;
-  @ManyToOne(() => Admin, (admin) => admin.patients)
-  admin: Admin;
-  @OneToOne(() => User, (user) => user.patient, { nullable: true })
-  user?:User;
-   @ManyToOne(() => MedicalHistory, (medicalHistory) => medicalHistory.patient, { cascade: true })
-    medicalHistory: MedicalHistory;
 
+  @ManyToOne(() => Chambre, (chambre) => chambre.patients, { nullable: true })
+  chambre: Chambre;
+
+  @ManyToOne(() => MedicalHistory, (medicalHistory) => medicalHistory.patient, { cascade: true, nullable: true })
+  medicalHistory: MedicalHistory;
 }

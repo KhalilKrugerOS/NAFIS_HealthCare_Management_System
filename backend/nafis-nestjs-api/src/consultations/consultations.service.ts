@@ -6,6 +6,7 @@ import { Consultation } from './entities/consultation.entity';
 import { Repository } from 'typeorm';
 import { PersonnelsService } from 'src/personnels/personnels.service';
 import { PersonnelType } from 'src/personnels/entities/personnel.entity';
+import { MedicalHistory } from 'src/medical-history/entities/medical-history.entity';
 
 @Injectable()
 export class ConsultationsService {
@@ -13,25 +14,62 @@ export class ConsultationsService {
     @InjectRepository(Consultation)
     private readonly consultationsRepository: Repository<Consultation>,
     @Inject(forwardRef(() => PersonnelsService))
-    private readonly personnelService: PersonnelsService, // Inject PersonnelService
+    private readonly personnelService: PersonnelsService,
+    @InjectRepository(MedicalHistory)
+    private readonly medicalHistoryRepository: Repository<MedicalHistory>
   ) {}
+
 
   async create(createConsultationDto: CreateConsultationDto) {
     // Validate that the selected personnel is a doctor (MEDECIN)
+    console.log(createConsultationDto)
     const medecin = await this.personnelService.findOne(createConsultationDto.medecinId);
+   
     if (!medecin || medecin.type !== PersonnelType.MEDECIN) {
       throw new BadRequestException('The selected personnel must be a doctor (MEDECIN)');
     }
   
-    // Create the consultation entity
+    // Check if medicalHistoryId is provided in the DTO
+    let medicalHistory;
+    if (createConsultationDto.medicalHistoryId) {
+      // If medicalHistoryId is provided, fetch the existing medical history
+      medicalHistory = await this.medicalHistoryRepository.findOne({
+        where: { id: createConsultationDto.medicalHistoryId },
+      });
+  
+      if (!medicalHistory) {
+        throw new BadRequestException('The provided medical history does not exist');
+      }
+    } else {
+      // If no medicalHistoryId is provided, check if the patient has an existing medical history
+      medicalHistory = await this.medicalHistoryRepository.findOne({
+        where: { patient: { id: createConsultationDto.patientId } },
+        relations: ['patient'],
+      });
+  
+      // If no medical history exists, create one
+      if (!medicalHistory) {
+        medicalHistory = this.medicalHistoryRepository.create({
+          patient: { id: createConsultationDto.patientId },
+        });
+        await this.medicalHistoryRepository.save(medicalHistory);
+      }
+    }
+  
+    // Create the consultation entity and associate medical history
     const consultation = this.consultationsRepository.create({
       ...createConsultationDto,
-      medecin, // Explicitly set the medecin relationship
+      medecin,        // Associate with the selected medecin
+      medicalHistory, // Associate with the found or created medical history
     });
   
     // Save the consultation
     return await this.consultationsRepository.save(consultation);
   }
+  async findByPatientId(patientId: number): Promise<Consultation[]> {
+    return await this.consultationsRepository.find({ where: { patientId } });
+  }
+  
   
 
   async findAll() {

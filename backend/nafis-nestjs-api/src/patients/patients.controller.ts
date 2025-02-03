@@ -4,14 +4,13 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 
 import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/guards/jwt-auth.guard';
 @Controller('patients')
+@UseGuards(AuthGuard)
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
-  @Post()
-  create(@Body() createPatientDto: CreatePatientDto) {
-    return this.patientsService.create(createPatientDto);
-  }
+
 
   @Get()
   

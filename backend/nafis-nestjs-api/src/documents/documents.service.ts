@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, forwardRef, Inject } from '@nestjs/common';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { Document } from './entities/document.entity';
@@ -12,6 +12,7 @@ export class DocumentsService {
   constructor(
     @InjectRepository(Document)
     private readonly documentsRepository: Repository<Document>,
+     @Inject(forwardRef(() => PatientsService))
     private readonly patientsService: PatientsService, // Inject PatientsService for patient validation
   ) {}
 
@@ -67,4 +68,18 @@ export class DocumentsService {
     }
     return await this.documentsRepository.remove(document);
   }
+  async findPatientDocuments(patientId: number) {
+    // Ensure the patient exists first
+    const patient = await this.patientsService.findOne(patientId);
+    if (!patient) {
+      throw new NotFoundException(`Patient with ID ${patientId} not found`);
+    }
+  
+    // Fetch all documents associated with the given patientId
+    const documents = await this.documentsRepository.find({ where: { patient: { id: patientId } } });
+  
+    // Return an empty array if no documents are found
+    return documents || [];
+  }
+  
 }

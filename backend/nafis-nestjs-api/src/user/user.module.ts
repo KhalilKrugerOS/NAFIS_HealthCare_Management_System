@@ -7,12 +7,16 @@ import { forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
+import { PersonnelsModule } from 'src/personnels/personnels.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports:[
     TypeOrmModule.forFeature([User,Admin]),
     forwardRef(() => PatientsModule),
-    forwardRef(() => AdminModule)
+    forwardRef(() => AdminModule),
+    forwardRef(() => PersonnelsModule),
+    forwardRef(() => AuthModule),
   ],
   controllers: [UserController],
   providers: [UserService],

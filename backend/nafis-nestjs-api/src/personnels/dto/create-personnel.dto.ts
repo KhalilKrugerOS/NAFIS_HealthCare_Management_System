@@ -1,50 +1,89 @@
-import { IsString, IsNotEmpty, IsEmail, IsEnum, IsDate } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsDateString, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PersonnelType, PersonnelCategorie, Specialite, PersonnelStatut } from '../entities/personnel.entity';
+import { SignupDto } from 'src/auth/dto/signup.dto';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Consultation } from 'src/consultations/entities/consultation.entity';
 
-export class CreatePersonnelDto {
+// Optional DTO for nested consultations if needed
+export class ConsultationDto {
+  @IsDateString()
   @IsNotEmpty()
-  @IsString()
-  nom: string;
+  date: Date;
 
   @IsNotEmpty()
-  @IsString()
-  prenom: string;
+  diagnostic: string;
+
+  @IsArray()
+  @IsNotEmpty()
+  prescriptions: string[];
 
   @IsNotEmpty()
+  patientId: number;
+
+  @IsOptional()
+  medicalHistoryId?: number;
+}
+
+export class CreatePersonnelDto extends SignupDto {
+  @ApiPropertyOptional({ enum: PersonnelType, default: PersonnelType.MEDECIN })
+  @IsOptional()
   @IsEnum(PersonnelType)
-  type: PersonnelType;
+  type?: PersonnelType = PersonnelType.MEDECIN;
 
-  @IsNotEmpty()
+  @ApiPropertyOptional({ enum: PersonnelCategorie })
+  @IsOptional()
   @IsEnum(PersonnelCategorie)
-  categorie: PersonnelCategorie;
+  categorie?: PersonnelCategorie;
 
-  @IsNotEmpty()
+  @ApiPropertyOptional({ enum: Specialite })
+  @IsOptional()
   @IsEnum(Specialite)
-  specialite: Specialite;
+  specialite?: Specialite;
 
-  @IsNotEmpty()
-  @IsString()
-  service: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  service?: string;
 
-  @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  matricule?: string;
 
-  @IsNotEmpty()
-  @IsString()
-  telephone: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  dateRecrutement?: Date;
 
-  @IsNotEmpty()
-  @IsString()
-  matricule: string;
-
-  @IsNotEmpty()
-  @IsDate() // Validates that the field is a valid date
-  @Type(() => Date) // Converts the incoming ISO string to a Date object
-  dateRecrutement: Date;
-
-  @IsNotEmpty()
+  @ApiPropertyOptional({ enum: PersonnelStatut })
+  @IsOptional()
   @IsEnum(PersonnelStatut)
-  statut: PersonnelStatut;
+  statut?: PersonnelStatut;
+
+  @ApiPropertyOptional({ type: [ConsultationDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ConsultationDto)
+  consultations?: ConsultationDto[];
+
+  // If you want to track availability for consultations
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsArray()
+  @IsDateString({}, { each: true })
+  availableSlots?: Date[];
+
+  // If you want to track consultation hours
+  @ApiPropertyOptional()
+  @IsOptional()
+  consultationHours?: {
+    start: string;
+    end: string;
+    daysOfWeek: string[];
+  };
+
+  // Maximum consultations per day
+  @ApiPropertyOptional()
+  @IsOptional()
+  maxConsultationsPerDay?: number;
 }

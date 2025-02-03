@@ -15,7 +15,6 @@ export class AuthGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean>{
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
-
         if (!token) {
             throw new UnauthorizedException("You have to login or signup");
         }
@@ -26,6 +25,7 @@ export class AuthGuard implements CanActivate {
                     secret: process.env.JWT_SECRET
                 }
             );
+            console.log(payload)
             request["user"] = payload;
         } catch {
             throw new UnauthorizedException()

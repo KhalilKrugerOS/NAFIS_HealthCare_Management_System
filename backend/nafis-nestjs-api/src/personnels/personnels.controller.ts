@@ -10,11 +10,7 @@ export class PersonnelsController {
 
   ) {}
 
-  @Post()
-  create(@Body() createPersonnelDto: CreatePersonnelDto) {
-    return this.personnelsService.create(createPersonnelDto);
-  }
-
+ 
   @Get()
   findAll() {
     return this.personnelsService.findAll();

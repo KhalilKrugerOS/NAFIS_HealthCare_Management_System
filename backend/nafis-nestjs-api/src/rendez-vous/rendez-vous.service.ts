@@ -157,8 +157,8 @@ export class RendezVousService {
 
     // Simulate sending a reminder (e.g., email, SMS, etc.)
     this.logger.log(
-      `Sending reminder to Patient: ${appointment.patient.email} ` +
-      `for appointment with Dr. ${appointment.medecin.email}`,
+      `Sending reminder to Patient: ${appointment.patient.user.email} ` +
+      `for appointment with Dr. ${appointment.medecin.user.email}`,
     );
 
     // Mark the reminder as sent

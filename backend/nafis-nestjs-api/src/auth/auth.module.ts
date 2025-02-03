@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
@@ -10,7 +10,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PatientsModule } from 'src/patients/patients.module';
 import { AdminModule } from 'src/admin/admin.module';
 import { UserModule } from 'src/user/user.module';
-
+import { AuthGuard } from 'src/guards/jwt-auth.guard';
+import { RoleAccessControlGuard } from 'src/guards/roles.guard';
+import { PersonnelsModule } from 'src/personnels/personnels.module';
+import { JwtService } from "@nestjs/jwt";
+import { Reflector } from '@nestjs/core';
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -27,11 +31,19 @@ import { UserModule } from 'src/user/user.module';
         };
       },
     }),
-    PatientsModule,  
-    AdminModule,    
-    UserModule      
+    forwardRef(() => PatientsModule),
+    
+    forwardRef(() => AdminModule),
+    
+    forwardRef(() => UserModule),
+    forwardRef(() => PersonnelsModule),
+
+     
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy,AuthGuard,  // Add AuthGuard here
+    RoleAccessControlGuard,Reflector],
+    exports:[AuthService, JwtStrategy,AuthGuard,  // Add AuthGuard here
+      RoleAccessControlGuard,JwtModule]
 })
 export class AuthModule {}

@@ -1,18 +1,12 @@
-import { IsString, IsDate, IsArray, IsNotEmpty, IsInt } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsNotEmpty, IsArray, IsString, IsInt, IsOptional, IsDateString } from 'class-validator';
 
 export class CreateConsultationDto {
-  @IsDate()
   @IsNotEmpty()
-  @Type(() => Date) // Automatically transforms ISO string to Date
+  @IsDateString()
   date: Date;
 
-  @IsInt()
   @IsNotEmpty()
-  medecinId: number;
-
   @IsString()
-  @IsNotEmpty()
   diagnostic: string;
 
   @IsArray()
@@ -22,4 +16,12 @@ export class CreateConsultationDto {
   @IsInt()
   @IsNotEmpty()
   patientId: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  medecinId: number; // This is for the doctor (personnel)
+
+  @IsInt()
+  @IsOptional() // Medical history is optional (can be null)
+  medicalHistoryId?: number;
 }

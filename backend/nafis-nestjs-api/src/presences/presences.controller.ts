@@ -14,6 +14,7 @@ export class PresencesController {
 
  
   @Get('presences')  
+
   findAll() {
     return this.presencesService.findAll();
   }

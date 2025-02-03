@@ -1,22 +1,7 @@
-import { IsString, IsNotEmpty, IsEmail, IsOptional, IsDateString } from 'class-validator';
+import { SignupDto } from 'src/auth/dto/signup.dto';
+import { IsOptional, IsString } from 'class-validator';
 
-export class CreatePatientDto {
-  @IsNotEmpty()
-  @IsString()
-  nom: string;
-
-  @IsNotEmpty()
-  @IsString()
-  prenom: string;
-
-  @IsNotEmpty()
-  @IsDateString()
-  dateNaissance: Date;
-
-  @IsNotEmpty()
-  @IsString()
-  numeroSecu: string;
-
+export class CreatePatientDto extends SignupDto {
   @IsOptional()
   @IsString()
   adresse?: string;
@@ -26,13 +11,9 @@ export class CreatePatientDto {
   telephone?: string;
 
   @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @IsOptional()
   @IsString()
   photoUrl?: string;
-  
-  Admin?: { id: number };
 
+  @IsOptional()
+  admin?: { id: number };
 }

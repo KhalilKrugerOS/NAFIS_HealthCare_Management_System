@@ -1,20 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStatistiquesPresenceDto } from './dto/create-statistiques-presence.dto';
 import { UpdateStatistiquesPresenceDto } from './dto/update-statistiques-presence.dto';
 import { StatistiquesPresence } from './entities/statistiques-presence.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PresencesService } from 'src/presences/presences.service';
-import { CongeDetail } from './entities/conge-detail.entity';
+import { CongeDetail, CongeType } from './entities/conge-detail.entity';
 import { AbsenceDetail } from './entities/absence-detail.entity';
 import { MissionDetail } from './entities/mission-detail.entity';
+import { Presence } from 'src/presences/entities/presence.entity';
 
 @Injectable()
 export class StatistiquesPresencesService {
   constructor(
     @InjectRepository(StatistiquesPresence)
     private readonly statsRepository: Repository<StatistiquesPresence>,
-    private readonly presenceService: PresencesService,  // Inject PresenceService
+    @Inject(forwardRef(() => PresencesService)) // Use forwardRef here
+    private readonly presenceService: PresencesService,
     @InjectRepository(CongeDetail)
     private readonly congeRepository: Repository<CongeDetail>,
     @InjectRepository(AbsenceDetail)
@@ -24,90 +26,206 @@ export class StatistiquesPresencesService {
   ) {}
 
   async create(createStatistiquesPresenceDto: CreateStatistiquesPresenceDto) {
-    const { presencesDetaillees, conges, absences, missions, joursPresent, joursAbsent, joursMission, joursConge, ...rest } = createStatistiquesPresenceDto;
+    const { personnelId, mois } = createStatistiquesPresenceDto;
 
-    // Fetch presences related to the personnelId in the statistiques presence
-    const presences = await Promise.all(
-      presencesDetaillees.map(async (personnelId) => {
-        return await this.presenceService.findByPersonnelId(personnelId); // Use findByPersonnelId
-      }),
-    );
+    const presences = await this.presenceService.findByPersonnelId(personnelId);
+    const filteredPresences = presences.filter((presence) => {
+      const formattedDate = presence.date.toISOString().slice(0, 7); // Format as 'YYYY-MM'
+      return formattedDate === mois;
+    });
+    
 
-    // Calculate tauxPresence
-    const totalDays = joursPresent + joursAbsent + joursMission + joursConge;
-    const tauxPresence = totalDays > 0 ? joursPresent / totalDays : 0;
+    let joursPresent = 0;
+    let joursAbsent = 0;
+    let joursConge = 0;
+    let joursMission = 0;
+
+    const conges: CongeDetail[] = [];
+    const absences: AbsenceDetail[] = [];
+    const missions: MissionDetail[] = [];
+    const presencesDetaillees: Presence[] = [];
+
+    for (const presence of filteredPresences) {
+      presencesDetaillees.push(presence);
+
+      switch (presence.statut) {
+        case 'PRESENT':
+          joursPresent++;
+          break;
+        case 'ABSENT':
+          joursAbsent++;
+          absences.push(
+            this.absenceRepository.create({
+              personnelId,
+              date: presence.date,
+              justifie: presence.justifie,
+              motif: presence.commentaire,
+            }),
+          );
+          break;
+        case 'CONGE':
+          joursConge++;
+          conges.push(
+            this.congeRepository.create({
+              personnelId,
+              debut: presence.debut,
+              fin: presence.fin,
+              type: presence.type as CongeType,
+              motif: presence.commentaire,
+            }),
+          );
+          break;
+        case 'MISSION':
+          joursMission++;
+          missions.push(
+            this.missionRepository.create({
+              personnelId,
+              debut: presence.debut,
+              fin: presence.fin,
+              description: presence.description,
+              lieu: presence.lieu,
+            }),
+          );
+          break;
+      }
+    }
+
+    const totalDays = joursPresent + joursAbsent + joursConge + joursMission;
+    const tauxPresence = totalDays > 0 ? (joursPresent / totalDays) * 100 : 0;
 
     const stat = this.statsRepository.create({
-      ...rest,
-      presencesDetaillees: presences.flat(), // Flatten the result if needed
-      conges: await this.congeRepository.findByIds(conges),
-      absences: await this.absenceRepository.findByIds(absences),
-      missions: await this.missionRepository.findByIds(missions),
+      personnelId,
+      mois,
       joursPresent,
       joursAbsent,
-      joursMission,
       joursConge,
-      tauxPresence, // Assign the calculated tauxPresence
+      joursMission,
+      tauxPresence,
+      presencesDetaillees,
+      conges,
+      absences,
+      missions,
     });
 
     return await this.statsRepository.save(stat);
-  }
-
-
-  async findAll() {
-    return await this.statsRepository.find({
-      relations: ['presencesDetaillees', 'conges', 'absences', 'missions', 'personnel'],
-    });
-  }
-
-  async findOne(id: number) {
-    const stat = await this.statsRepository.findOne({
-      where: { id },
-      relations: ['presencesDetaillees', 'conges', 'absences', 'missions', 'personnel'],
-    });
-    if (!stat) {
-      throw new NotFoundException(`StatistiquesPresence with ID ${id} not found`);
-    }
-    return stat;
   }
 
   async update(id: number, updateStatistiquesPresenceDto: UpdateStatistiquesPresenceDto) {
-    const { presencesDetaillees, conges, absences, missions, ...rest } = updateStatistiquesPresenceDto;
+    const { personnelId, mois } = updateStatistiquesPresenceDto;
 
     const stat = await this.findOne(id);
     if (!stat) {
       throw new NotFoundException(`StatistiquesPresence with ID ${id} not found`);
     }
 
-    Object.assign(stat, rest);
+    const presences = await this.presenceService.findByPersonnelId(personnelId);
+    const filteredPresences = presences.filter((presence) => {
+      const formattedDate = presence.date.toISOString().slice(0, 7); // Format as 'YYYY-MM'
+      return formattedDate === mois;
+    });
+    
 
-    // Fetch presences related to the personnelId in the statistiques presence
-    if (presencesDetaillees) {
-      const presences = await Promise.all(
-        presencesDetaillees.map(async (personnelId) => {
-          return await this.presenceService.findByPersonnelId(personnelId); // Use findByPersonnelId
-        }),
-      );
-      stat.presencesDetaillees = presences.flat(); // Flatten the result if needed
+    let joursPresent = 0;
+    let joursAbsent = 0;
+    let joursConge = 0;
+    let joursMission = 0;
+
+    const conges: CongeDetail[] = [];
+    const absences: AbsenceDetail[] = [];
+    const missions: MissionDetail[] = [];
+    const presencesDetaillees: Presence[] = [];
+
+    for (const presence of filteredPresences) {
+      presencesDetaillees.push(presence);
+
+      switch (presence.statut) {
+        case 'PRESENT':
+          joursPresent++;
+          break;
+        case 'ABSENT':
+          joursAbsent++;
+          absences.push(
+            this.absenceRepository.create({
+              personnelId,
+              date: presence.date,
+              justifie: presence.justifie,
+              motif: presence.description,
+            }),
+          );
+          break;
+        case 'CONGE':
+          joursConge++;
+          conges.push(
+            this.congeRepository.create({
+              personnelId,
+              debut: presence.debut,
+              fin: presence.fin,
+              type: presence.type as CongeType,
+              motif: presence.description,
+            }),
+          );
+          break;
+        case 'MISSION':
+          joursMission++;
+          missions.push(
+            this.missionRepository.create({
+              personnelId,
+              debut: presence.debut,
+              fin: presence.fin,
+              description: presence.description,
+              lieu: presence.lieu,
+            }),
+          );
+          break;
+      }
     }
-    if (conges) {
-      stat.conges = await this.congeRepository.findByIds(conges);
-    }
-    if (absences) {
-      stat.absences = await this.absenceRepository.findByIds(absences);
-    }
-    if (missions) {
-      stat.missions = await this.missionRepository.findByIds(missions);
-    }
+
+    const totalDays = joursPresent + joursAbsent + joursConge + joursMission;
+    const tauxPresence = totalDays > 0 ? (joursPresent / totalDays) * 100 : 0;
+
+    Object.assign(stat, {
+      personnelId,
+      mois,
+      joursPresent,
+      joursAbsent,
+      joursConge,
+      joursMission,
+      tauxPresence,
+      presencesDetaillees,
+      conges,
+      absences,
+      missions,
+    });
 
     return await this.statsRepository.save(stat);
   }
-
-  async remove(id: number) {
-    const stat = await this.findOne(id);
+  async findOne(id: number): Promise<StatistiquesPresence> {
+    const stat = await this.statsRepository.findOne({
+      where: { id },
+      relations: ['presencesDetaillees', 'conges', 'absences', 'missions'], // Include related entities
+    });
+  
     if (!stat) {
       throw new NotFoundException(`StatistiquesPresence with ID ${id} not found`);
     }
-    return await this.statsRepository.remove(stat);
+  
+    return stat;
   }
+  
+  async findAll(): Promise<StatistiquesPresence[]> {
+    return await this.statsRepository.find({
+      relations: ['presencesDetaillees', 'conges', 'absences', 'missions'], // Include related entities
+    });
+  }
+  
+  async remove(id: number): Promise<void> {
+    const stat = await this.findOne(id); // Ensure the record exists
+    await this.statsRepository.remove(stat);
+  }
+  async findByPersonnelAndMonth(personnelId: number, mois: string): Promise<StatistiquesPresence | undefined> {
+    return await this.statsRepository.findOne({
+      where: { personnelId, mois },
+    });
+  }
+  
 }

@@ -32,6 +32,16 @@ import { MessagingModule } from './messaging/messaging.module';
 import { MessageEntity } from './messaging/entities/message.entity';
 import { MessageRequestEntity } from './messaging/entities/message-request.entity';
 import { ConversationEntity } from './messaging/entities/conversation.entity';
+import { AlertesModule } from './alerte/entities/alerte.module';
+import { ChambresModule } from './chambres/chambres.module';
+import { ConstantesVitalesModule } from './constantes-vitales/constantes-vitales.module';
+import { ConsultationsModule } from './consultations/consultations.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { PatientsModule } from './patients/patients.module';
+import { PersonnelsModule } from './personnels/personnels.module';
+import { PresencesModule } from './presences/presences.module';
+import { RendezVousModule } from './rendez-vous/rendez-vous.module';
+import { StatistiquesPresencesModule } from './statistiques-presences/statistiques-presences.module';
 
 @Module({
   imports: [
@@ -39,6 +49,7 @@ import { ConversationEntity } from './messaging/entities/conversation.entity';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
+
       type: 'postgres',
       url: process.env.DATABASE_URL,
       synchronize: false,
@@ -48,11 +59,21 @@ import { ConversationEntity } from './messaging/entities/conversation.entity';
     TypeOrmModule.forFeature([User]),
     AuthModule,
     UserModule,
-    MqttModule,
     MedicalHistoryModule,
-    DocumentsModule,
     AdminModule,
-    MessagingModule
+    MessagingModule,
+    AlertesModule,
+    ChambresModule,
+    ConstantesVitalesModule,
+    ConsultationsModule,
+    DocumentsModule,
+    MqttModule,
+    MetricsModule,
+    PatientsModule,
+    PersonnelsModule,
+    PresencesModule,
+    RendezVousModule,
+    StatistiquesPresencesModule
   ],
   controllers: [AppController],
   providers: [AppService],
