@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateChambreDto } from './dto/create-chambre.dto';
 import { UpdateChambreDto } from './dto/update-chambre.dto';
@@ -72,16 +73,18 @@ export class ChambresService {
   
 
   async create(createChambreDto: CreateChambreDto) {
-    const { patientIds = [], ...chambreData } = createChambreDto;
+    const { type, statut, patientIds } = createChambreDto;
   
     if (!Array.isArray(patientIds)) {
       throw new BadRequestException('patientIds must be an array');
     }
+
+    const patients = await this.patientsService.findByIds(patientIds);
   
     const chambre = this.chambresRepository.create({
-      ...chambreData,
-      statut: createChambreDto.statut, // Explicitly set the original statut
-      patients: []
+      type: type,
+      statut: statut, 
+      patients: patients
     });
   
     if (patientIds.length > 0) {

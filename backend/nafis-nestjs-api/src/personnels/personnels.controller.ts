@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PersonnelsService } from './personnels.service';
 import { CreatePersonnelDto } from './dto/create-personnel.dto';

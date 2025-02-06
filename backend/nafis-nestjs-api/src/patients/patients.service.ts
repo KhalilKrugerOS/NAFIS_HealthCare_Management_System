@@ -3,7 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Patient } from './entities/patient.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 @Injectable()
 export class PatientsService {
 
@@ -62,6 +62,9 @@ export class PatientsService {
     };
   }
   async findByIds(ids: number[]): Promise<Patient[]> {
-    return await this.patientsRepository.findByIds(ids); 
+    return await this.patientsRepository.find({
+      where: {id: In(ids)},
+      relations: ["user"]
+    }); 
   }
 }

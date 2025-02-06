@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { ChambresService } from './chambres.service';
 import { CreateChambreDto } from './dto/create-chambre.dto';

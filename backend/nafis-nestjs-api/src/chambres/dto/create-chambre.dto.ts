@@ -15,7 +15,4 @@ export class CreateChambreDto {
   @IsNumber({}, { each: true })
   patientIds?: number[];
 
-  @IsOptional()
-  @IsNumber()
-  dernierNettoyage?: string;
 }
