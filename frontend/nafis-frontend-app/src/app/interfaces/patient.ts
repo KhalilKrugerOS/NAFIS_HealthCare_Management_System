@@ -1,11 +1,13 @@
+import { User} from './user';
+
 export interface Patient {
-  lastname: string;
-  firstname: string;
-  dateNaissance: string;
-  numeroSecu: string;
-  adresse: string;
-  telephone: string;
-  email: string;
-  photoUrl?: string;
-  status?: 'present' | 'absent';
+  id: number;
+  user: User;
+  consultations?: any[]; 
+  documents?: any[];
+  rendezvous?: any[]; 
+  cv?: any[];
+  chambre?: any; 
+  admin?: any; 
+  medicalHistory?: any; 
 }
