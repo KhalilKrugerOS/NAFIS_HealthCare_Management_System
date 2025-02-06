@@ -26,12 +26,12 @@ export class DashboardService {
         userId: patient.id,
         error: '',
         stats: [],
-        greetingMessage: `Welcome, ${patient.user.firstname}`,
-        fullName: `${patient.user.firstname} ${patient.user.lastname}`,
+        greetingMessage: `Welcome, ${patient.firstname}`,
+        fullName: `${patient.firstname} ${patient.lastname}`,
         subtitle: 'Patient Dashboard'
       })),
       catchError(error => of(this.getDefaultErrorState(error.message)))
-  getDashboardState(segments: UrlSegment[]): Observable<DashboardState> {
+  this.getDashboardState(segments: UrlSegment[]): Observable<DashboardState> {
     if (segments.length < 2) {
       console.warn('Not enough segments in URL');
       return EMPTY;
