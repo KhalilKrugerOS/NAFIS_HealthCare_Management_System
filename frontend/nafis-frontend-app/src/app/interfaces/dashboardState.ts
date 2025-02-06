@@ -1,7 +1,8 @@
+
 export interface DashboardState {
   type: 'doctor' | 'patient';
   stats: any;
-  error: boolean;
+  error: string;
   greetingMessage: string;
   fullName: string;
   subtitle: string;
