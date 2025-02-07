@@ -2,18 +2,18 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chambre, ChambreLog } from '../../interfaces/chambre';
-import { GestionChambreService } from "../../core/services/gestion-chambre.service";
+import { GestionChambreService } from '../../core/services/gestion-chambre.service';
 
 @Component({
   selector: 'app-gestion-chambre',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './gestion-chambre.component.html',
-  styleUrls: ['./gestion-chambre.component.scss']
+  styleUrls: ['./gestion-chambre.component.scss'],
 })
 export class GestionChambreComponent {
   private roomService = inject(GestionChambreService);
-  
+
   rooms = this.roomService.getRooms();
   selectedRoom = signal<Chambre | null>(null);
 
@@ -23,24 +23,35 @@ export class GestionChambreComponent {
 
   getRoomTypeLabel(type: 'SIMPLE' | 'DOUBLE' | 'SOINS_INTENSIFS'): string {
     switch (type) {
-      case 'SIMPLE': return 'Simple';
-      case 'DOUBLE': return 'Double';
-      case 'SOINS_INTENSIFS': return 'Soins Intensifs';
-      default: return type;
+      case 'SIMPLE':
+        return 'Simple';
+      case 'DOUBLE':
+        return 'Double';
+      case 'SOINS_INTENSIFS':
+        return 'Soins Intensifs';
+      default:
+        return type;
     }
   }
 
   getRoomCapacity(type: 'SIMPLE' | 'DOUBLE' | 'SOINS_INTENSIFS'): number {
     switch (type) {
-      case 'SIMPLE': return 1;
-      case 'DOUBLE': return 2;
-      case 'SOINS_INTENSIFS': return 2;
-      default: return 1;
+      case 'SIMPLE':
+        return 1;
+      case 'DOUBLE':
+        return 2;
+      case 'SOINS_INTENSIFS':
+        return 2;
+      default:
+        return 1;
     }
   }
 
   formatSecu(numeroSecu: string): string {
-    return numeroSecu.replace(/(\d{1})(\d{2})(\d{2})(\d{2})(\d{3})(\d{3})(\d{2})/, '$1 $2 $3 $4 $5 $6 $7');
+    return numeroSecu.replace(
+      /(\d{1})(\d{2})(\d{2})(\d{2})(\d{3})(\d{3})(\d{2})/,
+      '$1 $2 $3 $4 $5 $6 $7'
+    );
   }
 
   formatDate(date: string): string {
@@ -49,14 +60,16 @@ export class GestionChambreComponent {
       month: '2-digit',
       year: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
   updateStatus(status: 'LIBRE' | 'OCCUPE' | 'NETTOYAGE') {
     if (this.selectedRoom()) {
       this.roomService.updateRoomStatus(this.selectedRoom()!.numero, status);
-      this.selectedRoom.update(room => room ? { ...room, statut: status } : null);
+      this.selectedRoom.update((room) =>
+        room ? { ...room, statut: status } : null
+      );
     }
   }
 
@@ -68,9 +81,10 @@ export class GestionChambreComponent {
 
   getRoomHistory(): ChambreLog[] {
     const history = this.roomService.getHistory()();
-    return history
-      .find(h => h.chambreId === this.selectedRoom()?.numero)
-      ?.historique || [];
+    return (
+      history.find((h) => h.chambreId === this.selectedRoom()?.numero)
+        ?.historique || []
+    );
   }
 
   canAddPatient(): boolean {
@@ -82,7 +96,10 @@ export class GestionChambreComponent {
 
   removePatient(patientId: number) {
     if (this.selectedRoom()) {
-      this.roomService.removePatientFromRoom(this.selectedRoom()!.numero, patientId);
+      this.roomService.removePatientFromRoom(
+        this.selectedRoom()!.numero,
+        patientId
+      );
     }
   }
 

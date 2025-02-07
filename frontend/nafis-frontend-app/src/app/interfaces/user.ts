@@ -18,8 +18,4 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
-  admin?: Admin;
-  patients?: Patient[];
-  personnel?: Personnel;
-  statut?: 'PRESENT' | 'ABSENT' | 'CONGE' | 'MISSION';
 }

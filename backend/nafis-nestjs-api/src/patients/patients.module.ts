@@ -8,16 +8,19 @@ import { Admin } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { UserModule } from 'src/user/user.module';
 import { AdminModule } from 'src/admin/admin.module';
+import { JwtService } from '@nestjs/jwt';
+import { ConsultationsModule } from 'src/consultations/consultations.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Patient]),
     forwardRef(() => MedicalHistoryModule),
     forwardRef(() => UserModule),
-    forwardRef(() => AdminModule)
+    forwardRef(() => AdminModule),
+    ConsultationsModule
   ],
   controllers: [PatientsController],
-  providers: [PatientsService],
+  providers: [PatientsService, JwtService],
   exports: [PatientsService],
 })
 export class PatientsModule {}

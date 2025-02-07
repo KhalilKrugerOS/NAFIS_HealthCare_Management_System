@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException, BadRequestException, forwardRef, Inject } from '@nestjs/common';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
@@ -6,6 +7,7 @@ import { Consultation } from './entities/consultation.entity';
 import { Repository } from 'typeorm';
 import { PersonnelsService } from 'src/personnels/personnels.service';
 import { PersonnelType } from 'src/personnels/entities/personnel.entity';
+import { Patient } from 'src/patients/entities/patient.entity';
 
 @Injectable()
 export class ConsultationsService {
@@ -86,5 +88,21 @@ export class ConsultationsService {
     if (personnel.type !== PersonnelType.MEDECIN) {
       throw new BadRequestException('The selected personnel must be a doctor (MEDECIN)');
     }
+  }
+
+  async findPatientsByDoctor(doctorId: number) {
+    const consultations = await this.consultationsRepository
+                    .createQueryBuilder('consultation')
+                    .leftJoinAndSelect('consultation.patient', 'patient')
+                    .where('consultation.medecinId = :doctorId', { doctorId })
+                    .getMany();
+
+    const patientsMap = new Map<number, Patient>();
+    consultations.forEach((consultation) => {
+      if (consultation.patient && !patientsMap.has(consultation.patient.id)) {
+        patientsMap.set(consultation.patient.id, consultation.patient);
+      }
+    });
+    return Array.from(patientsMap.values());
   }
 }

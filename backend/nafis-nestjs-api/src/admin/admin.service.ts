@@ -40,7 +40,7 @@ export class AdminService {
     const admin = await this.adminRepository
         .createQueryBuilder('admin')
         .leftJoinAndSelect('admin.user', 'user')
-        .leftJoinAndSelect('admin.personnel', 'personnel')
+        .leftJoinAndSelect('admin.personnels', 'personnel')
         .groupBy('admin.id')
         .addGroupBy('user.id')
         .addGroupBy('personnel.id')

@@ -15,9 +15,10 @@ import {
 } from 'rxjs';
 import { CalendarSidebarComponent } from './calender-sidebar/calender-sidebar.component';
 import { DashboardState } from '../../interfaces/dashboardState';
-import { DashboardService } from '../../core/services/dashboard.service';
+import { PatientService } from '../../core/services/patient.service';
 import { tap } from 'rxjs/operators';
 import { ButtonComponent } from '../../shared/button/button.component';
+import { Patient } from '../../interfaces/patient';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,28 +38,26 @@ import { ButtonComponent } from '../../shared/button/button.component';
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   dashboardState$!: Observable<DashboardState>;
+  patient$!: Observable<Patient>;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private dashboardService: DashboardService
+    private patientService: PatientService 
   ) {}
 
   ngOnInit() {
     this.initializeDashboard();
+    this.loadPatientDetails();
   }
 
   private initializeDashboard() {
     this.dashboardState$ = this.route.url.pipe(
-      switchMap((segments) =>
-        this.dashboardService.getDashboardState(segments)
-      ),
+      switchMap((segments) => {
+        return EMPTY;
+      }),
       tap((state) => {
-        console.log('Dashboard State:', {
-          type: state.type,
-          userId: state.userId,
-          error: state.error,
-        });
+        console.log('Dashboard State:', state);
       }),
       catchError((error) => {
         console.error('Failed to initialize dashboard:', error);
@@ -67,17 +66,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  getUserId(state: DashboardState): number {
-    const id = this.route.snapshot.url[1].path;
-    return parseInt(id);
+  private loadPatientDetails() {
+    const patientId = this.extractPatientId();
+    if (patientId) {
+      this.patient$ = this.patientService.getPatientById(patientId).pipe(
+        tap(patient => console.log('Patient Details:', patient)),
+        catchError(error => {
+          console.error('Failed to load patient details:', error);
+          return EMPTY;
+        })
+      );
+    }
   }
 
-  getUserType(state: DashboardState): 'doctor' | 'patient' {
-    return state.type;
+  private extractPatientId(): number | null {
+    try {
+      const idSegment = this.route.snapshot.url[1];
+      return idSegment ? parseInt(idSegment.path, 10) : null;
+    } catch (error) {
+      console.error('Error extracting patient ID:', error);
+      return null;
+    }
   }
 
   ngOnDestroy() {
-    this.destroy$.next(void 0);
+    this.destroy$.next();
     this.destroy$.complete();
   }
 }

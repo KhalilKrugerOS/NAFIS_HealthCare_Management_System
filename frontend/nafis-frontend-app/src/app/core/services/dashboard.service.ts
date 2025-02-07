@@ -1,17 +1,37 @@
 import { Injectable } from '@angular/core';
-import { catchError, EMPTY, map, Observable, switchMap, of } from 'rxjs';
+import { EMPTY, Observable, of } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
+import { PatientService } from './patient.service';
 import { DashboardState } from '../../interfaces/dashboardState';
 import { UrlSegment } from '@angular/router';
 import { MockDataService } from './mock-data.service';
 import { tap } from 'rxjs/operators';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class DashboardService {
-  constructor(private mockDataService: MockDataService) {}
+  constructor(private patientService: PatientService) {}
 
-  getDashboardState(segments: UrlSegment[]): Observable<DashboardState> {
+  getDashboardState(segments: any[]): Observable<DashboardState> {
+    const patientId = segments.length > 1 ? parseInt(segments[1].path, 10) : null;
+
+    if (!patientId) {
+      return of(this.getDefaultErrorState());
+    }
+
+    return this.patientService.getPatientById(patientId).pipe(
+      map(patient => ({
+        type: 'patient' as const,
+        userId: patient.id,
+        error: '',
+        stats: [],
+        greetingMessage: `Welcome, ${patient.firstname}`,
+        fullName: `${patient.firstname} ${patient.lastname}`,
+        subtitle: 'Patient Dashboard'
+      })),
+      catchError(error => of(this.getDefaultErrorState(error.message)))
+  this.getDashboardState(segments: UrlSegment[]): Observable<DashboardState> {
     if (segments.length < 2) {
       console.warn('Not enough segments in URL');
       return EMPTY;
@@ -77,6 +97,18 @@ export class DashboardService {
     );
   }
 
+  private getDefaultErrorState(errorMessage?: string): DashboardState {
+    return {
+      type: 'patient',
+      userId: 0,
+      error: errorMessage || 'Unable to load dashboard',
+      stats: [],
+      greetingMessage: 'Welcome',
+      fullName: '',
+      subtitle: 'Dashboard'
+    };
+  }
+}
   private getPatientDashboardState(id: string): Observable<DashboardState> {
     return this.mockDataService.getPatient(parseInt(id)).pipe(
       switchMap((patient) => {

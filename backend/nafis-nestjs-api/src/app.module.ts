@@ -34,6 +34,8 @@ import { MessageRequestEntity } from './messaging/entities/message-request.entit
 import { ConversationEntity } from './messaging/entities/conversation.entity';
 import { MailModule } from './mailer/mailer.module';
 import { PersonnelsModule } from './personnels/personnels.module';
+import { PatientsModule } from './patients/patients.module';
+import { ChambresModule } from './chambres/chambres.module';
 
 
 @Module({
@@ -58,6 +60,8 @@ import { PersonnelsModule } from './personnels/personnels.module';
     MessagingModule,
     MailModule,
     PersonnelsModule,
+    PatientsModule,
+    ChambresModule
   ],
   controllers: [AppController],
   providers: [AppService],
